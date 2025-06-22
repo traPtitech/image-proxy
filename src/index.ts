@@ -4,33 +4,35 @@ import { ResponseHeader } from "hono/utils/headers";
 
 const app = new Hono();
 
-const wrapResponseWithCacheHeader = (
-	response: Response,
-	cacheStatus: "HIT" | "MISS",
-): Response => {
-	const headers = new Headers(response.headers);
-	headers.set("X-Image-Proxy-Cache", cacheStatus);
-	return new Response(response.body, {
-		status: response.status,
-		statusText: response.statusText,
-		headers,
-	});
-};
+// const CACHE_HIT_HEADER = "X-Image-Proxy-Cache";
 
-const fetchOrCache = async (
-	request: Request,
-	fetcher: (request: Request) => Promise<Response>,
-) => {
-	const cacheResponse = await caches.default.match(request);
-	if (cacheResponse) {
-		return wrapResponseWithCacheHeader(cacheResponse, "HIT");
-	}
-	const response = await fetcher(request);
-	if (200 <= response.status && response.status < 300) {
-		await caches.default.put(request, response.clone());
-	}
-	return wrapResponseWithCacheHeader(response, "MISS");
-};
+// const wrapResponseWithCacheHeader = (
+// 	response: Response,
+// 	cacheStatus: "HIT" | "MISS",
+// ): Response => {
+// 	const headers = new Headers(response.headers);
+// 	headers.set(CACHE_HIT_HEADER, cacheStatus);
+// 	return new Response(response.body, {
+// 		status: response.status,
+// 		statusText: response.statusText,
+// 		headers,
+// 	});
+// };
+
+// const fetchOrCache = async (
+// 	request: Request,
+// 	fetcher: (request: Request) => Promise<Response>,
+// ) => {
+// 	const cacheResponse = await caches.default.match(request);
+// 	if (cacheResponse) {
+// 		return wrapResponseWithCacheHeader(cacheResponse, "HIT");
+// 	}
+// 	const response = await fetcher(request);
+// 	if (200 <= response.status && response.status < 300) {
+// 		caches.default.put(request, response.clone());
+// 	}
+// 	return wrapResponseWithCacheHeader(response, "MISS");
+// };
 
 app.get("/icon/:username", async (c) => {
 	const username = c.req.param("username");
@@ -46,16 +48,20 @@ app.get("/icon/:username", async (c) => {
 		cf: { image: imageOptions },
 	};
 
-	const res = await fetchOrCache(imageRequest, (req) => fetch(req, options));
+	const res = await fetch(imageRequest, options);
+	// const res = await fetchOrCache(imageRequest, (req) => fetch(req, options));
 
-	if (res.status === 304) {
-		return c.body(null, 304);
-	}
-
-	const responseHeaders: Partial<Record<ResponseHeader, string>> = {
+	const responseHeaders: Partial<
+		Record<ResponseHeader | "X-Image-Proxy-Cache", string>
+	> = {
 		"Cache-Control": "public, max-age=3600, s-maxage=3600",
 		"Content-Type": res.headers.get("Content-Type") ?? undefined,
+		// [CACHE_HIT_HEADER]: res.headers.get(CACHE_HIT_HEADER) ?? "MISS",
 	};
+
+	if (res.status === 304) {
+		return c.body(null, 304, responseHeaders);
+	}
 
 	return c.body(await res.arrayBuffer(), 200, responseHeaders);
 });
