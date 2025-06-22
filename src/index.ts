@@ -1,18 +1,11 @@
 import { Hono } from "hono";
 import { getCfImageOptions } from "./cf-image";
 
-type Environment = {
-	Bindings: {
-		TRAQ_ORIGIN: string;
-	};
-};
-
-const app = new Hono<Environment>();
+const app = new Hono();
 
 app.get("/icon/:username", async (c) => {
-	const origin = c.env.TRAQ_ORIGIN;
 	const username = c.req.param("username");
-	const requestUrl = `${origin}/api/v3/public/icon/${username}`;
+	const requestUrl = `https://q.trpa.jp/api/v3/public/icon/${username}`;
 
 	const request = c.req.raw;
 	const imageOptions = getCfImageOptions(c.req.url);
