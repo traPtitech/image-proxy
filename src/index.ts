@@ -1,18 +1,33 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Hono } from "hono";
+import { getCfImageOptions } from "./cf-image";
 
-export default {
-	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
-	},
-} satisfies ExportedHandler<Env>;
+type Environment = {
+	Bindings: {
+		TRAQ_ORIGIN: string;
+	};
+};
+
+const app = new Hono<Environment>();
+
+app.get("/icon/:username", async (c) => {
+	const origin = c.env.TRAQ_ORIGIN;
+	const username = c.req.param("username");
+	const requestUrl = `${origin}/api/v3/public/icon/${username}`;
+
+	const request = c.req.raw;
+	const imageOptions = getCfImageOptions(c.req.url);
+	const options: RequestInit<CfProperties> = {
+		cf: {
+			image: imageOptions,
+		},
+	};
+
+	const imageRequest = new Request(requestUrl, {
+		headers: request.headers,
+	});
+
+	const res = await fetch(imageRequest, options);
+	return new Response(res.body, res);
+});
+
+export default app;
