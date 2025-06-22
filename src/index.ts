@@ -28,7 +28,7 @@ app.get("/icon/:username", async (c) => {
 		});
 
 		const res = await fetch(imageRequest, options);
-		return res.clone();
+		return res;
 	} catch (err) {
 		console.error("Error fetching icon:", err);
 		return c.text("Internal Server Error", 500);
