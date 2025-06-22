@@ -20,9 +20,7 @@ app.get("/icon/:username", async (c) => {
 
 	const res = await fetch(imageRequest, options);
 
-	const responseHeaders: Partial<
-		Record<ResponseHeader | "X-Image-Proxy-Cache", string>
-	> = {
+	const responseHeaders: Partial<Record<ResponseHeader, string>> = {
 		"Cache-Control": "public, max-age=3600, s-maxage=3600",
 		"Content-Type": res.headers.get("Content-Type") ?? undefined,
 	};
