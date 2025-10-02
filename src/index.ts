@@ -1,12 +1,25 @@
-import { Hono } from "hono";
+import { Context, Hono } from "hono";
 import { getCfImageOptions } from "./cf-image";
 import { ResponseHeader } from "hono/utils/headers";
+import { BlankEnv, BlankInput } from "hono/types";
 
 const app = new Hono();
 
-app.get("/icon/:username", async (c) => {
+app.get(
+	"/icon/:username",
+	(c) => responseIconWithCacheControl(c, "https://q.trap.jp"),
+);
+app.get(
+	"/ex-icon/:username",
+	(c) => responseIconWithCacheControl(c, "https://q.ex.trap.jp"),
+);
+
+const responseIconWithCacheControl = async (
+	c: Context<BlankEnv, "/icon/:username", BlankInput>,
+	origin: string,
+) => {
 	const username = c.req.param("username");
-	const requestUrl = `https://q.trap.jp/api/v3/public/icon/${username}`;
+	const requestUrl = `${origin}/api/v3/public/icon/${username}`;
 
 	const imageOptions = getCfImageOptions(c.req.url);
 	const requestHeaders = new Headers();
@@ -30,6 +43,6 @@ app.get("/icon/:username", async (c) => {
 	}
 
 	return c.body(await res.arrayBuffer(), 200, responseHeaders);
-});
+};
 
 export default app;
