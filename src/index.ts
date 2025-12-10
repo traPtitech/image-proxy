@@ -5,22 +5,26 @@ import { BlankEnv, BlankInput } from "hono/types";
 
 const app = new Hono();
 
-app.get(
-	"/icon/:username",
-	(c) => responseIconWithCacheControl(c, "https://q.trap.jp"),
-);
-app.get(
-	"/ex-icon/:username",
-	(c) => responseIconWithCacheControl(c, "https://q.ex.trap.jp"),
-);
+app.get("/icon/:username", (c) =>
+	responseImageWithCacheControl(
+		c,
+		`https://q.trap.jp/api/v3/public/icon/${c.req.param("username")}`,
+	));
+app.get("/ex-icon/:username", (c) =>
+	responseImageWithCacheControl(
+		c,
+		`https://q.ex.trap.jp/api/v3/public/icon/${c.req.param("username")}`,
+	));
+app.get("/stamp/:stampId", (c) =>
+	responseImageWithCacheControl(
+		c,
+		`https://q.trap.jp/api/1.0/public/emoji/${c.req.param("stampId")}`,
+	));
 
-const responseIconWithCacheControl = async (
-	c: Context<BlankEnv, "/icon/:username", BlankInput>,
-	origin: string,
+const responseImageWithCacheControl = async (
+	c: Context<BlankEnv, "", BlankInput>,
+	requestUrl: string,
 ) => {
-	const username = c.req.param("username");
-	const requestUrl = `${origin}/api/v3/public/icon/${username}`;
-
 	const imageOptions = getCfImageOptions(c.req.url);
 	const requestHeaders = new Headers();
 	requestHeaders.set("User-Agent", "traP Image Proxy");
