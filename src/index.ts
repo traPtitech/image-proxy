@@ -37,6 +37,8 @@ const responseImageWithCacheControl = async (
 
 	const res = await fetch(imageRequest, options);
 	if (!res.ok) {
+		console.log(res);
+
 		return c.body(null, res.status === 404 ? 404 : 500);
 	}
 
