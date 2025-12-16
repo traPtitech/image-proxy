@@ -36,6 +36,9 @@ const responseImageWithCacheControl = async (
 	};
 
 	const res = await fetch(imageRequest, options);
+	if (!res.ok) {
+		return c.body(null, res.status === 404 ? 404 : 500);
+	}
 
 	const responseHeaders: Partial<Record<ResponseHeader, string>> = {
 		"Cache-Control": "public, max-age=3600, s-maxage=3600",
