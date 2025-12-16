@@ -48,7 +48,7 @@ const responseImageWithCacheControl = async (
 
 			const originalResponse = await fetch(requestUrl, {
 				redirect: "manual",
-				cf: { cacheKey },
+				headers: requestHeaders,
 			});
 
 			console.log(requestUrl, imageRequest.url);
