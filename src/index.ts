@@ -69,6 +69,7 @@ const responseImageWithCacheControl = async (
 
 			const response = new Response(image, { headers: responseHeaders });
 			c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+			return response;
 		}
 
 		return c.body(null, res.status === 404 ? 404 : 500);
