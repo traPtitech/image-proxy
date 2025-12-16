@@ -50,9 +50,16 @@ const responseImageWithCacheControl = async (
 				cf: { cacheKey },
 				redirect: "manual",
 			});
+
+			console.log(requestUrl, imageRequest.url);
+
 			console.log(originalResponse.status, [
 				...originalResponse.headers.entries(),
 			]);
+
+			if (originalResponse.status !== 200) {
+				return c.body(null, 500);
+			}
 
 			const body = await originalResponse.arrayBuffer();
 			const responseHeaders: Partial<Record<ResponseHeader, string>> = {
