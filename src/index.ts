@@ -58,10 +58,11 @@ const responseImageWithCacheControl = async (
 			const body = await originalResponse.arrayBuffer();
 			const responseHeaders: Partial<Record<ResponseHeader, string>> = {
 				"Cache-Control": "public, max-age=3600, s-maxage=3600",
-				"Content-Type": imageOptions.format
-					? "image/" + imageOptions.format
-					: originalResponse.headers.get("Content-Type") ??
-						undefined,
+				"Content-Type":
+					["jpeg", "png", "webp", "avif"].includes(imageOptions.format ?? "")
+						? "image/" + imageOptions.format
+						: originalResponse.headers.get("Content-Type") ??
+							undefined,
 			};
 
 			const image = await optimizeImage({
