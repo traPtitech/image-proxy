@@ -48,6 +48,11 @@ const responseImageWithCacheControl = async (
 
 			const originalResponse = await fetch(requestUrl, {
 				redirect: "manual",
+				headers: {
+					"User-Agent": "Mozilla/5.0",
+					"Accept": "*/*",
+					"Accept-Encoding": "gzip, deflate, br",
+				},
 			});
 
 			console.log(requestUrl, imageRequest.url);
