@@ -50,6 +50,10 @@ const responseImageWithCacheControl = async (
 				cf: { cacheKey },
 				redirect: "manual",
 			});
+			console.log(originalResponse.status, [
+				...originalResponse.headers.entries(),
+			]);
+
 			const body = await originalResponse.arrayBuffer();
 			const responseHeaders: Partial<Record<ResponseHeader, string>> = {
 				"Cache-Control": "public, max-age=3600, s-maxage=3600",
