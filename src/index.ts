@@ -46,7 +46,7 @@ const responseImageWithCacheControl = async (
 			const cachedResponse = await cache.match(cacheKey);
 			if (cachedResponse) return cachedResponse;
 
-			const originalResponse = await fetch(requestUrl, {
+			const originalResponse = await fetch(requestUrl + "?test", {
 				redirect: "manual",
 				headers: {
 					"User-Agent": "Mozilla/5.0",
