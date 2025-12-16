@@ -46,13 +46,9 @@ const responseImageWithCacheControl = async (
 			const cachedResponse = await cache.match(cacheKey);
 			if (cachedResponse) return cachedResponse;
 
-			const originalResponse = await fetch(requestUrl + "?test", {
+			const originalResponse = await fetch(requestUrl, {
 				redirect: "manual",
-				headers: {
-					"User-Agent": "Mozilla/5.0",
-					"Accept": "*/*",
-					"Accept-Encoding": "gzip, deflate, br",
-				},
+				cf: { cacheKey },
 			});
 
 			console.log(requestUrl, imageRequest.url);
