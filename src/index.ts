@@ -47,7 +47,6 @@ const responseImageWithCacheControl = async (
 			if (cachedResponse) return cachedResponse;
 
 			const originalResponse = await fetch(imageRequest, {
-				cf: { cacheKey },
 				redirect: "manual",
 			});
 
