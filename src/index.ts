@@ -46,7 +46,7 @@ const responseImageWithCacheControl = async (
 			const cachedResponse = await cache.match(cacheKey);
 			if (cachedResponse) return cachedResponse;
 
-			const originalResponse = await fetch(imageRequest, {
+			const originalResponse = await fetch(imageRequest.clone(), {
 				redirect: "manual",
 			});
 
