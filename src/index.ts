@@ -2,6 +2,7 @@ import { Context, Hono } from "hono";
 import { getCfImageOptions } from "./cf-image";
 import { ResponseHeader } from "hono/utils/headers";
 import { BlankEnv, BlankInput } from "hono/types";
+import { optimizeImage } from "wasm-image-optimization";
 
 const app = new Hono();
 
@@ -37,7 +38,38 @@ const responseImageWithCacheControl = async (
 
 	const res = await fetch(imageRequest, options);
 	if (!res.ok) {
-		console.log([...res.headers.entries()]);
+		// Image Transformation limit exceeded
+		if (res.status === 429 && res.headers.get("cf-resized") === "err=9422") {
+			const cache = await caches.open("img");
+
+			const cacheKey = requestUrl + JSON.stringify(imageOptions);
+			const cachedResponse = await cache.match(cacheKey);
+			if (cachedResponse) return cachedResponse;
+
+			const originalResponse = await fetch(requestUrl, { cf: { cacheKey } });
+			const body = await originalResponse.arrayBuffer();
+			const responseHeaders: Partial<Record<ResponseHeader, string>> = {
+				"Cache-Control": "public, max-age=3600, s-maxage=3600",
+				"Content-Type": originalResponse.headers.get("Content-Type") ??
+					undefined,
+			};
+
+			const image = await optimizeImage({
+				image: body,
+				width: imageOptions.width,
+				height: imageOptions.height,
+				quality: typeof imageOptions.quality === "number"
+					? imageOptions.quality
+					: undefined,
+				format:
+					["jpeg", "png", "webp", "avif"].includes(imageOptions.format ?? "")
+						? (imageOptions.format as "jpeg" | "png" | "webp" | "avif")
+						: undefined,
+			});
+
+			const response = new Response(image, { headers: responseHeaders });
+			c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+		}
 
 		return c.body(null, res.status === 404 ? 404 : 500);
 	}
