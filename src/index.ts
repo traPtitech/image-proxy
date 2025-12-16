@@ -46,7 +46,7 @@ const responseImageWithCacheControl = async (
 			const cachedResponse = await cache.match(cacheKey);
 			if (cachedResponse) return cachedResponse;
 
-			const originalResponse = await fetch(requestUrl, { cf: { cacheKey } });
+			const originalResponse = await fetch(imageRequest, { cf: { cacheKey } });
 			const body = await originalResponse.arrayBuffer();
 			const responseHeaders: Partial<Record<ResponseHeader, string>> = {
 				"Cache-Control": "public, max-age=3600, s-maxage=3600",
