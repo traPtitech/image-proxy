@@ -55,7 +55,8 @@ const responseImageWithCacheControl = async (
 				return c.body(null, 500);
 			}
 
-			const body = await originalResponse.arrayBuffer();
+			const originalImage = await originalResponse.arrayBuffer();
+
 			const responseHeaders: Partial<Record<ResponseHeader, string>> = {
 				"Cache-Control": "public, max-age=3600, s-maxage=3600",
 				"Content-Type":
@@ -65,8 +66,8 @@ const responseImageWithCacheControl = async (
 							undefined,
 			};
 
-			const image = await optimizeImage({
-				image: body,
+			const optimizedImage = await optimizeImage({
+				image: originalImage,
 				width: imageOptions.width,
 				height: imageOptions.height,
 				quality: typeof imageOptions.quality === "number"
@@ -78,7 +79,20 @@ const responseImageWithCacheControl = async (
 						: undefined,
 			});
 
-			const response = new Response(image, { headers: responseHeaders });
+			// if wasm-image-optimization fails, return the original image
+			if (optimizedImage === undefined) {
+				return new Response(originalImage, {
+					headers: {
+						"Cache-Control": "public, max-age=3600, s-maxage=3600",
+						"Content-Type": originalResponse.headers.get("Content-Type") ??
+							"image/*",
+					},
+				});
+			}
+
+			const response = new Response(optimizedImage, {
+				headers: responseHeaders,
+			});
 			c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
 			return response;
 		}
