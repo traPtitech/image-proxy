@@ -66,21 +66,28 @@ const responseImageWithCacheControl = async (
 							undefined,
 			};
 
-			const optimizedImage = await optimizeImage({
-				image: originalImage,
-				width: imageOptions.width,
-				height: imageOptions.height,
-				quality: typeof imageOptions.quality === "number"
-					? imageOptions.quality
-					: undefined,
-				format:
-					["jpeg", "png", "webp", "avif"].includes(imageOptions.format ?? "")
-						? (imageOptions.format as "jpeg" | "png" | "webp" | "avif")
+			try {
+				const optimizedImage = await optimizeImage({
+					image: originalImage,
+					width: imageOptions.width,
+					height: imageOptions.height,
+					quality: typeof imageOptions.quality === "number"
+						? imageOptions.quality
 						: undefined,
-			});
-
-			// if wasm-image-optimization fails, return the original image
-			if (optimizedImage === undefined) {
+					format:
+						["jpeg", "png", "webp", "avif"].includes(imageOptions.format ?? "")
+							? (imageOptions.format as "jpeg" | "png" | "webp" | "avif")
+							: undefined,
+					animation: true,
+				});
+				const response = new Response(optimizedImage.data, {
+					headers: responseHeaders,
+				});
+				c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
+				return response;
+			} catch (e) {
+				// If optimization fails, log the error and return the original image
+				console.error("Image optimization failed:", e);
 				return new Response(originalImage, {
 					headers: {
 						"Cache-Control": "public, max-age=3600, s-maxage=3600",
@@ -89,12 +96,6 @@ const responseImageWithCacheControl = async (
 					},
 				});
 			}
-
-			const response = new Response(optimizedImage, {
-				headers: responseHeaders,
-			});
-			c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));
-			return response;
 		}
 
 		return c.body(null, res.status === 404 ? 404 : 500);
