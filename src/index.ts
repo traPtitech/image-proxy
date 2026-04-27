@@ -39,7 +39,8 @@ const responseImageWithCacheControl = async (
 	const res = await fetch(imageRequest, options);
 	if (!res.ok) {
 		// Image Transformation limit exceeded
-		if (res.status === 429 && res.headers.get("cf-resized") === "err=9422") {
+		// or any other errors occurred during image processing
+		if (res.headers.get("cf-resized")?.startsWith("err=")) {
 			const cache = await caches.open("img");
 
 			const cacheKey = requestUrl + JSON.stringify(imageOptions);
