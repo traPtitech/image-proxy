@@ -9,12 +9,16 @@ const app = new Hono();
 app.get("/icon/:username", (c) =>
 	responseImageWithCacheControl(
 		c,
-		`https://q.trap.jp/api/v3/public/icon/${c.req.param("username")}`,
+		`https://q.trap.jp/api/v3/public/icon/${
+			encodeURIComponent(c.req.param("username"))
+		}`,
 	));
 app.get("/ex-icon/:username", (c) =>
 	responseImageWithCacheControl(
 		c,
-		`https://q.ex.trap.jp/api/v3/public/icon/${c.req.param("username")}`,
+		`https://q.ex.trap.jp/api/v3/public/icon/${
+			encodeURIComponent(c.req.param("username"))
+		}`,
 	));
 app.get("/stamp/:stampId", (c) =>
 	responseImageWithCacheControl(
