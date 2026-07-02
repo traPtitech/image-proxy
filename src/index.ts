@@ -6,6 +6,12 @@ import { optimizeImage } from "wasm-image-optimization";
 
 const app = new Hono();
 
+const maxAge = 60 * 60 * 24; // 1 day
+const sMaxAge = 60 * 60 * 24 * 30; // 30 days
+const staleWhileRevalidate = 60 * 60 * 24 * 365; // 1 year
+const IMAGE_CACHE_CONTROL =
+	`public, max-age=${maxAge}, s-maxage=${sMaxAge}, stale-while-revalidate=${staleWhileRevalidate}`;
+
 app.get("/icon/:username", (c) =>
 	responseImageWithCacheControl(
 		c,
@@ -37,7 +43,11 @@ const responseImageWithCacheControl = async (
 	const imageRequest = new Request(requestUrl, { headers: requestHeaders });
 
 	const options: RequestInit<CfProperties> = {
-		cf: { image: imageOptions },
+		cf: {
+			image: imageOptions,
+			cacheEverything: true,
+			cacheControl: IMAGE_CACHE_CONTROL,
+		},
 	};
 
 	const res = await fetch(imageRequest, options);
@@ -63,7 +73,7 @@ const responseImageWithCacheControl = async (
 			const originalImage = await originalResponse.arrayBuffer();
 
 			const responseHeaders: Partial<Record<ResponseHeader, string>> = {
-				"Cache-Control": "public, max-age=3600, s-maxage=3600",
+				"Cache-Control": IMAGE_CACHE_CONTROL,
 				"Content-Type":
 					["jpeg", "png", "webp", "avif"].includes(imageOptions.format ?? "")
 						? "image/" + imageOptions.format
@@ -95,7 +105,7 @@ const responseImageWithCacheControl = async (
 				console.error("Image optimization failed:", e);
 				return new Response(originalImage, {
 					headers: {
-						"Cache-Control": "public, max-age=3600, s-maxage=3600",
+						"Cache-Control": IMAGE_CACHE_CONTROL,
 						"Content-Type": originalResponse.headers.get("Content-Type") ??
 							"image/*",
 					},
@@ -107,7 +117,7 @@ const responseImageWithCacheControl = async (
 	}
 
 	const responseHeaders: Partial<Record<ResponseHeader, string>> = {
-		"Cache-Control": "public, max-age=3600, s-maxage=3600",
+		"Cache-Control": IMAGE_CACHE_CONTROL,
 		"Content-Type": res.headers.get("Content-Type") ?? undefined,
 	};
 
