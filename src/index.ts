@@ -1,10 +1,13 @@
 import { Context, Hono } from "hono";
+import { cors } from "hono/cors";
 import { getCfImageOptions } from "./cf-image";
 import { ResponseHeader } from "hono/utils/headers";
 import { BlankEnv, BlankInput } from "hono/types";
 import { optimizeImage } from "wasm-image-optimization";
 
 const app = new Hono();
+
+app.use("*", cors({ origin: "*" }));
 
 const maxAge = 60 * 60 * 24; // 1 day
 const sMaxAge = 60 * 60 * 24 * 30; // 30 days
